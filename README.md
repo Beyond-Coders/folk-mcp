@@ -64,7 +64,7 @@ If using .env file, you can omit the `env` block.
 | `folk_search_people` | Search for people by name, email, company |
 | `folk_get_person` | Get full person details |
 | `folk_create_person` | Create person with emails, companies, groups |
-| `folk_update_person` | Update person fields, companies, groups |
+| `folk_update_person` | Update person fields, companies, groups, and custom fields (e.g. Status) |
 | `folk_delete_person` | Delete a person |
 
 ### Companies
@@ -92,6 +92,7 @@ If using .env file, you can omit the `env` block.
 ## Key Features
 
 - **Company linking** — Associate people with companies on create or update
+- **Custom field updates** — Update group-scoped fields like Status via `customFieldValues` on `folk_update_person`
 - **Group management** — Add people/companies to groups with object-format IDs
 - **Retry logic** — Automatic retry with exponential backoff for transient failures
 - **Rate limit handling** — Respects `Retry-After` header on 429 responses
@@ -120,6 +121,13 @@ Export the "Potential Investors" group from Folk as CSV
 ```
 Add person per_xxx to the "Komunite" group in Folk
 ```
+
+### Update a person's status
+```
+Update John Doe's status to "Active" in Folk (group grp_xxx)
+```
+
+Custom fields are scoped to a group. Pass them as `customFieldValues` keyed by group ID, e.g. `{"grp_xxx": {"Status": "Active"}}`.
 
 ## Security
 
