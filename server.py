@@ -282,6 +282,14 @@ class FolkMCPServer:
                                     }
                                 },
                                 "description": "Groups to set (replaces all existing)."
+                            },
+                            "customFieldValues": {
+                                "type": "object",
+                                "description": "Custom field values keyed by group ID (grp_xxx). Each value is an object of field name to value. Example: {\"grp_xxx\": {\"Status\": \"Active\", \"Tags\": [\"VIP\"]}}",
+                                "additionalProperties": {
+                                    "type": "object",
+                                    "additionalProperties": True
+                                }
                             }
                         },
                         "required": ["person_id"]
@@ -691,7 +699,7 @@ class FolkMCPServer:
                         payload = {}
 
                         # Add fields to update with correct Folk API field names
-                        for field in ["firstName", "lastName", "emails", "jobTitle", "description", "companies", "groups"]:
+                        for field in ["firstName", "lastName", "emails", "jobTitle", "description", "companies", "groups", "customFieldValues"]:
                             if field in arguments:
                                 payload[field] = arguments[field]
 
