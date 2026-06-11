@@ -333,20 +333,37 @@ class FolkMCPServer:
                 ),
                 types.Tool(
                     name="folk_add_note",
-                    description="Add a note to a person",
+                    description="Create a note linked to a person, company, or deal. Supports markdown content, public/private visibility, and replies.",
                     inputSchema={
                         "type": "object",
                         "properties": {
+                            "entity_id": {
+                                "type": "string",
+                                "description": "Entity ID to attach the note to (per_xxx, com_xxx, or deal ID)"
+                            },
+                            "content": {
+                                "type": "string",
+                                "description": "Note content in plain text or markdown (1-100000 chars)"
+                            },
+                            "visibility": {
+                                "type": "string",
+                                "enum": ["public", "private"],
+                                "description": "public: visible to workspace; private: visible only to you",
+                                "default": "public"
+                            },
+                            "parent_note_id": {
+                                "type": "string",
+                                "description": "Optional parent note ID (nte_xxx) when replying to an existing note"
+                            },
                             "person_id": {
                                 "type": "string",
-                                "description": "The ID of the person"
+                                "description": "Deprecated alias for entity_id when attaching to a person"
                             },
                             "note": {
                                 "type": "string",
-                                "description": "The note content"
+                                "description": "Deprecated alias for content"
                             }
-                        },
-                        "required": ["person_id", "note"]
+                        }
                     }
                 ),
                 types.Tool(
@@ -801,26 +818,60 @@ class FolkMCPServer:
                         )]
                     
                     elif name == "folk_add_note":
-                        person_id = arguments["person_id"]
-                        note = arguments["note"]
+                        entity_id = arguments.get("entity_id") or arguments.get("person_id")
+                        content = arguments.get("content") or arguments.get("note")
+                        visibility = arguments.get("visibility", "public")
+                        parent_note_id = arguments.get("parent_note_id")
 
-                        # Validate person_id format
-                        if not validate_id(person_id, "person_id"):
+                        if not entity_id or not content:
                             return [types.TextContent(
                                 type="text",
-                                text="Error: Invalid person_id format"
+                                text="Error: entity_id (or person_id) and content (or note) are required"
                             )]
+
+                        if not validate_id(entity_id, "entity_id"):
+                            return [types.TextContent(
+                                type="text",
+                                text="Error: Invalid entity_id format"
+                            )]
+
+                        if visibility not in ("public", "private"):
+                            return [types.TextContent(
+                                type="text",
+                                text="Error: visibility must be 'public' or 'private'"
+                            )]
+
+                        if not isinstance(content, str) or not (1 <= len(content) <= 100000):
+                            return [types.TextContent(
+                                type="text",
+                                text="Error: content must be between 1 and 100000 characters"
+                            )]
+
+                        if parent_note_id and not validate_id(parent_note_id, "parent_note_id"):
+                            return [types.TextContent(
+                                type="text",
+                                text="Error: Invalid parent_note_id format"
+                            )]
+
+                        payload = {
+                            "entity": {"id": entity_id},
+                            "visibility": visibility,
+                            "content": content,
+                        }
+                        if parent_note_id:
+                            payload["parentNote"] = {"id": parent_note_id}
 
                         response = await retry_request(
                             client, "post",
-                            f"{FOLK_API_BASE_URL}/people/{person_id}/notes",
+                            f"{FOLK_API_BASE_URL}/notes",
                             headers=headers,
-                            json={"content": note}
+                            json=payload
                         )
+                        data = response.json()
 
                         return [types.TextContent(
                             type="text",
-                            text=f"Note added to person {person_id} successfully"
+                            text=f"Note created successfully:\n{json.dumps(data, indent=2)}"
                         )]
                     
                     elif name == "folk_export_group":

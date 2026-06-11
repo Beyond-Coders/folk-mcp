@@ -87,7 +87,7 @@ If using .env file, you can omit the `env` block.
 ### Notes
 | Tool | Description |
 |------|-------------|
-| `folk_add_note` | Add a note to a person |
+| `folk_add_note` | Create a note on a person, company, or deal (markdown, public/private) |
 
 ## Key Features
 
@@ -128,6 +128,13 @@ Update John Doe's status to "Active" in Folk (group grp_xxx)
 ```
 
 Custom fields are scoped to a group. Pass them as `customFieldValues` keyed by group ID, e.g. `{"grp_xxx": {"Status": "Active"}}`.
+
+### Add a note to a lead
+```
+Add a note to John Doe in Folk: TIER 1 — Qualified. COO at Digital Pay...
+```
+
+Notes support markdown, public/private visibility, and can be linked to people (`per_xxx`), companies (`com_xxx`), or deals. Use `visibility: "private"` for notes only you can see.
 
 ## Security
 
